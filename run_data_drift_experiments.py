@@ -4,7 +4,6 @@ import datetime
 import logging
 
 import numpy as np
-import plotly.express as px
 
 from helpers import generator_helpers as gen_help
 
@@ -81,7 +80,7 @@ def generate_new_data(run_mode, n_points_per_generator, dict_init_generators_per
 
             logging.debug(f'Client {client} chooses client {other_client}.')
 
-            #
+            # generate new data with generators from other client
             _client_generators = dict_init_generators_per_client.get(other_client)
             X_new_data_client = generate_data_from_generators(generators_per_client=_client_generators,
                                                               n_points_per_generator=n_points_new_data)
@@ -178,13 +177,6 @@ if __name__ == '__main__':
                                                )
         list_local_learners.append(local_learner)
 
-        # fig = px.scatter(x=X_initial_client[:, 0],
-        #                 y=X_initial_client[:, 1],
-        #                 range_x=[-10, 10],
-        #                 range_y=[-10, 10],
-        #                 title=f'Initial data of client {client}')
-        # fig.show()
-
     # learn federated fuzzy c-means model
     global_learner = fcgl.GlobalClusterer(local_learners=list_local_learners,
                                           num_clusters=num_clusters,
@@ -256,7 +248,7 @@ if __name__ == '__main__':
         for client, local_learner in enumerate(list_local_learners):
             local_learner.set_new_data(dict_new_data_per_client.get(client))
 
-            #print(f'Client {client} has {local_learner.client_data.shape[0]} data points.')
+            logging.debug(f'Client {client} has {local_learner.client_data.shape[0]} data points.')
 
         # with new data, recalculate global Davies-Bouldin
         recalculated_global_db = db.calculate_federated_fuzzy_db(list_local_learners,
