@@ -27,6 +27,7 @@ def generate_random_covariance_matrix(dim: int):
     :param dim: Dimension of covariance matrix.
     :return: Covariance matrix.
     """
+
     sigma = make_spd_matrix(n_dim=dim, random_state=None)
     return sigma
 
@@ -100,5 +101,3 @@ def make_gaussian_data_generator_random_mean_random_cov(dim: int, mean_min_val: 
                                                   cov_mat=cov_mat
                                                   )
     return data_generator
-
-    return
