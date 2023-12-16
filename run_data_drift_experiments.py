@@ -133,7 +133,7 @@ if __name__ == '__main__':
 
     run_mode = 'no_local_drift'  # 'no_local_drift'  # 'local_but_no_global_drift' # global_drift
     n_repeats = 1000
-    acceptability_threshold = 0.05
+    acceptability_threshold = 0.01
 
     n_clients = 10
     ratio_drifted_clients = 1.0  # only relevant for global drift
@@ -311,6 +311,7 @@ if __name__ == '__main__':
             mlflow.log_param('assume_num_clust_known', assume_num_clust_known)
 
             mlflow.log_metric('drift_detected_counter', drift_detected_counter)
+            mlflow.log_metric('initial_global_db', initial_global_db)
             #mlflow.log_artifact(dict_experiments_results)
 
             if run_mode in ['no_local_drift', 'local_but_no_global_drift']:
