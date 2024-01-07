@@ -305,13 +305,13 @@ if __name__ == '__main__':
 
     # Create parameter grid for experiments
     parameter_grid = {
-        'run_mode': ['global_drift_unused_generators'],#['global_drift', 'local_but_no_global_drift', 'global_drift_unused_generators'],
+        'run_mode': ['global_drift_unused_generators', 'global_drift'], #['global_drift', 'local_but_no_global_drift', 'global_drift_unused_generators'],
         'acceptability_threshold': [0.01, 0.025, 0.05],
         'dim_data': [2, 25, 100],
         'n_clients': [10],
         'ideal_cluster_num_deviation': [-0.5, 0.0, 0.5],
         'ratio_unused_client_generators': [0.1, 0.5, 0.9],
-        'ratio_new_data_distribution': [0.1, 0.5, 0.9]
+        'ratio_new_data_distribution': [0.1, 0.5, 0.9, 1.0]
     }
 
     # iterate over parameter grid
@@ -323,18 +323,19 @@ if __name__ == '__main__':
                         # if the run_mode is 'global_drift_unused_generators', we only need to iterate over the ratio_unused_client_generators parameter
                         if run_mode == 'global_drift_unused_generators':
                             for ratio_unused_client_generators in parameter_grid.get('ratio_unused_client_generators'):
-                                run_data_drift_experiments(run_mode=run_mode,
-                                                           acceptability_threshold=acceptability_threshold,
-                                                           dim_data=dim_data,
-                                                           ideal_cluster_num_deviation=ideal_cluster_num_deviation,
-                                                           ratio_unused_client_generators=ratio_unused_client_generators,
-                                                           ratio_new_data_distribution=1.0, # this can also be used to make distribution "partially" disappear
-                                                           n_repeats=n_repeats,
-                                                           n_clients=n_clients,
-                                                           n_time_steps=n_time_steps,
-                                                           save_results=save_results,
-                                                           log_mlflow=log_mlflow
-                                                           )
+                                for ratio_new_data_distribution in parameter_grid.get('ratio_new_data_distribution'):
+                                    run_data_drift_experiments(run_mode=run_mode,
+                                                               acceptability_threshold=acceptability_threshold,
+                                                               dim_data=dim_data,
+                                                               ideal_cluster_num_deviation=ideal_cluster_num_deviation,
+                                                               ratio_unused_client_generators=ratio_unused_client_generators,
+                                                               ratio_new_data_distribution=ratio_new_data_distribution, # this can also be used to make distribution "partially" disappear
+                                                               n_repeats=n_repeats,
+                                                               n_clients=n_clients,
+                                                               n_time_steps=n_time_steps,
+                                                               save_results=save_results,
+                                                               log_mlflow=log_mlflow
+                                                               )
                         # if the run_mode is 'global_drift', we need to iterate over the ratio_new_data_distribution parameters
                         elif run_mode == 'global_drift':
                             for ratio_new_data_distribution in parameter_grid.get('ratio_new_data_distribution'):
