@@ -59,6 +59,9 @@ def run_data_drift_experiments(run_mode='global_drift',
     ##### Experiment parameters (derived) #####
     drifting_clients = int(n_clients * ratio_drifted_clients)
     n_unused_client_generators = int(n_clients * ratio_unused_client_generators) # number of clients of which data generators are not used -> only global drift
+    # if the run_mode is global_drift_unused_generators, then the number of unused client generators must be at least 1
+    if run_mode == 'global_drift_unused_generators':
+        n_unused_client_generators = max(n_unused_client_generators, 1)
     cov_mat_initial = np.eye(dim_data) * cov_mat_initial_scale  # we make sure the initial data is clusterable
 
 
@@ -219,6 +222,18 @@ def run_data_drift_experiments(run_mode='global_drift',
     # add drift_detected_counter to dictionary
     dict_experiments_results['drift_detected_counter'] = drift_detected_counter
 
+    # save experiment results as pickle file
+    if save_results:
+        now = datetime.datetime.now()
+        now_str = now.strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f'./results/{run_mode}_{now_str}_results.pkl'
+        with open(filename, 'wb') as f:
+            pickle.dump(dict_experiments_results, f)
+        print(f'Saved results to {filename}.')
+    else:
+        print('Not saving results.')
+        filename = 'None'
+
     # log experiment results and parameters to mlflow
     if log_mlflow:
         import mlflow
@@ -235,6 +250,7 @@ def run_data_drift_experiments(run_mode='global_drift',
             mlflow.log_param('drifting_clients', drifting_clients)
             mlflow.log_param('acceptability_threshold', acceptability_threshold)
             mlflow.log_param('ratio_unused_client_generators', ratio_unused_client_generators)
+            mlflow.log_param('n_unused_client_generators', n_unused_client_generators)
             mlflow.log_param('ratio_new_data_distribution', ratio_new_data_distribution)
             mlflow.log_param('dim_data', dim_data)
             mlflow.log_param('n_generators_per_client', n_generators_per_client)
@@ -252,6 +268,7 @@ def run_data_drift_experiments(run_mode='global_drift',
             mlflow.log_param('ideal_cluster_num_deviation', ideal_cluster_num_deviation)
             mlflow.log_param('num_clusters_used', num_clusters)
             mlflow.log_param('ideal_cluster_num', ideal_cluster_num)
+            mlflow.log_param('filename', filename)
 
             mlflow.log_metric('drift_detected_counter', drift_detected_counter)
 
@@ -271,18 +288,9 @@ def run_data_drift_experiments(run_mode='global_drift',
             if run_mode in ['no_local_drift', 'local_but_no_global_drift']:
                 false_positive_rate = drift_detected_counter / (n_repeats*n_time_steps)
                 mlflow.log_metric('false_positive_rate', false_positive_rate)
-            elif run_mode == 'global_drift':
+            elif run_mode in ['global_drift', 'global_drift_unused_generators']:
                 true_positive_rate = drift_detected_counter / (n_repeats*n_time_steps)
                 mlflow.log_metric('true_positive_rate', true_positive_rate)
-
-    # save experiment results as pickle file
-    if save_results:
-        now = datetime.datetime.now()
-        now_str = now.strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f'./results/{run_mode}_{now_str}_results.pkl'
-        with open(filename, 'wb') as f:
-            pickle.dump(dict_experiments_results, f)
-        print(f'Saved results to {filename}.')
 
 if __name__ == '__main__':
 
@@ -297,9 +305,10 @@ if __name__ == '__main__':
 
     # Create parameter grid for experiments
     parameter_grid = {
-        'run_mode': ['global_drift', 'local_but_no_global_drift', 'global_drift_unused_generators'],
+        'run_mode': ['global_drift_unused_generators'],#['global_drift', 'local_but_no_global_drift', 'global_drift_unused_generators'],
         'acceptability_threshold': [0.01, 0.025, 0.05],
         'dim_data': [2, 25, 100],
+        'n_clients': [10],
         'ideal_cluster_num_deviation': [-0.5, 0.0, 0.5],
         'ratio_unused_client_generators': [0.1, 0.5, 0.9],
         'ratio_new_data_distribution': [0.1, 0.5, 0.9]
@@ -310,42 +319,45 @@ if __name__ == '__main__':
         for acceptability_threshold in parameter_grid.get('acceptability_threshold'):
             for dim_data in parameter_grid.get('dim_data'):
                 for ideal_cluster_num_deviation in parameter_grid.get('ideal_cluster_num_deviation'):
-                    # if the run_mode is 'global_drift_unused_generators', we only need to iterate over the ratio_unused_client_generators parameter
-                    if run_mode == 'global_drift_unused_generators':
-                        for ratio_unused_client_generators in parameter_grid.get('ratio_unused_client_generators'):
+                    for n_clients in parameter_grid.get('n_clients'):
+                        # if the run_mode is 'global_drift_unused_generators', we only need to iterate over the ratio_unused_client_generators parameter
+                        if run_mode == 'global_drift_unused_generators':
+                            for ratio_unused_client_generators in parameter_grid.get('ratio_unused_client_generators'):
+                                run_data_drift_experiments(run_mode=run_mode,
+                                                           acceptability_threshold=acceptability_threshold,
+                                                           dim_data=dim_data,
+                                                           ideal_cluster_num_deviation=ideal_cluster_num_deviation,
+                                                           ratio_unused_client_generators=ratio_unused_client_generators,
+                                                           ratio_new_data_distribution=1.0, # this can also be used to make distribution "partially" disappear
+                                                           n_repeats=n_repeats,
+                                                           n_clients=n_clients,
+                                                           n_time_steps=n_time_steps,
+                                                           save_results=save_results,
+                                                           log_mlflow=log_mlflow
+                                                           )
+                        # if the run_mode is 'global_drift', we need to iterate over the ratio_new_data_distribution parameters
+                        elif run_mode == 'global_drift':
+                            for ratio_new_data_distribution in parameter_grid.get('ratio_new_data_distribution'):
+                                run_data_drift_experiments(run_mode=run_mode,
+                                                           acceptability_threshold=acceptability_threshold,
+                                                           dim_data=dim_data,
+                                                           ideal_cluster_num_deviation=ideal_cluster_num_deviation,
+                                                           ratio_unused_client_generators=0.0,
+                                                           ratio_new_data_distribution=ratio_new_data_distribution,
+                                                           n_repeats=n_repeats,
+                                                           n_clients=n_clients,
+                                                           n_time_steps=n_time_steps,
+                                                           save_results=save_results,
+                                                           log_mlflow=log_mlflow
+                                                           )
+                        # if the run_mode is 'local_but_no_global_drift' or 'no_local_drift', we do not need to iterate over any more parameters
+                        else:
                             run_data_drift_experiments(run_mode=run_mode,
                                                        acceptability_threshold=acceptability_threshold,
                                                        dim_data=dim_data,
                                                        ideal_cluster_num_deviation=ideal_cluster_num_deviation,
-                                                       ratio_unused_client_generators=ratio_unused_client_generators,
-                                                       ratio_new_data_distribution=0.0,
-                                                       n_repeats=n_repeats,
-                                                       n_time_steps=n_time_steps,
-                                                       save_results=save_results,
-                                                       log_mlflow=log_mlflow
+                                                       n_repeats=20,
+                                                       n_time_steps=10,
+                                                       save_results=True,
+                                                       log_mlflow=True
                                                        )
-                    # if the run_mode is 'global_drift', we need to iterate over the ratio_new_data_distribution parameters
-                    elif run_mode == 'global_drift':
-                        for ratio_new_data_distribution in parameter_grid.get('ratio_new_data_distribution'):
-                            run_data_drift_experiments(run_mode=run_mode,
-                                                       acceptability_threshold=acceptability_threshold,
-                                                       dim_data=dim_data,
-                                                       ideal_cluster_num_deviation=ideal_cluster_num_deviation,
-                                                       ratio_unused_client_generators=0.0,
-                                                       ratio_new_data_distribution=ratio_new_data_distribution,
-                                                       n_repeats=n_repeats,
-                                                       n_time_steps=n_time_steps,
-                                                       save_results=save_results,
-                                                       log_mlflow=log_mlflow
-                                                       )
-                    # if the run_mode is 'local_but_no_global_drift' or 'no_local_drift', we do not need to iterate over any more parameters
-                    else:
-                        run_data_drift_experiments(run_mode=run_mode,
-                                                   acceptability_threshold=acceptability_threshold,
-                                                   dim_data=dim_data,
-                                                   ideal_cluster_num_deviation=ideal_cluster_num_deviation,
-                                                   n_repeats=20,
-                                                   n_time_steps=10,
-                                                   save_results=True,
-                                                   log_mlflow=True
-                                                   )
