@@ -31,8 +31,8 @@ This repository implements a federated data drift detection system that monitors
 │   └── generator_helpers.py            # Helper functions for data generation
 ├── 2D_experiment_inspector.ipynb       # Jupyter notebook for 2D experiment visualization
 ├── result_summary_analysis.ipynb       # Jupyter notebook for analyzing experiment results
-├── results/                            # Directory for experiment results (pickle files)
-└── result_summary/                     # Directory for result summaries (CSV files)
+├── results/                            # (Not created by default) Directory for experiment results (pickle files); create this if running with result saving enabled (e.g., save_results=True)
+└── result_summary/                     # (Not created by default) Directory for result summaries (CSV files); create this if running with result saving enabled
 ```
 
 ## How It Works
