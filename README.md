@@ -30,7 +30,8 @@ This repository implements a federated data drift detection system that monitors
 │   └── generator_helpers.py            # Helper functions for data generation
 ├── 2D_experiment_inspector.ipynb       # Jupyter notebook for 2D experiment visualization
 ├── result_summary_analysis.ipynb       # Jupyter notebook for analyzing experiment results
-└── result_summary/                     # Directory for experiment results
+├── results/                            # Directory for experiment results (pickle files)
+└── result_summary/                     # Directory for result summaries (CSV files)
 ```
 
 ## How It Works
@@ -52,7 +53,7 @@ This repository implements a federated data drift detection system that monitors
 - scikit-learn 0.24.2
 - plotly 5.18.0
 - pandas 1.1.5
-- mlflow ~1.23.1
+- mlflow ~1.23.1 (approximate version for compatibility with different environments)
 - Additional dependency: `cluster_library` (federated clustering implementation)
 
 ## Installation
@@ -128,6 +129,8 @@ Each result file contains:
 - Initial cluster centers and Davies-Bouldin scores
 - Per-timestep drift detection results
 - Drift detection counters
+
+Additionally, CSV summaries of results are stored in the `result_summary/` directory for easier analysis.
 
 ## License
 
