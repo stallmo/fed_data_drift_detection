@@ -115,7 +115,16 @@ The repository includes Jupyter notebooks for analyzing experiment results:
 
 ## MLflow Integration
 
-If MLflow logging is enabled, experiments are tracked at `http://localhost:8080`. Make sure an MLflow server is running before starting experiments with `log_mlflow=True`.
+If MLflow logging is enabled, experiments are tracked at `http://localhost:8080`. To use MLflow tracking:
+
+1. Start an MLflow server:
+   ```bash
+   mlflow server --host 0.0.0.0 --port 8080
+   ```
+
+2. Run experiments with `log_mlflow=True`
+
+For more information on MLflow, see the [MLflow documentation](https://mlflow.org/docs/latest/index.html).
 
 ## Output
 
