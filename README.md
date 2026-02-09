@@ -1,6 +1,7 @@
 # Federated Data Drift Detection
 
 A framework for detecting data drift in federated learning environments using fuzzy clustering and the Davies-Bouldin index.
+The code in this repository accompanies the paper [Towards Unsupervised Sudden Data Drift Detection in Federated Learning with Fuzzy Clustering](https://ieeexplore.ieee.org/document/10611883).
 
 ## Overview
 
