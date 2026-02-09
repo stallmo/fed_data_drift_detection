@@ -141,15 +141,3 @@ Each result file contains:
 - Drift detection counters
 
 Additionally, CSV summaries of results are stored in the `result_summary/` directory for easier analysis.
-
-## License
-
-[Add your license information here]
-
-## Contributing
-
-[Add contribution guidelines here]
-
-## Citation
-
-[Add citation information if applicable]
